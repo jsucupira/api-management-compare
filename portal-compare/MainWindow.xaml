@@ -4,9 +4,22 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:portal_compare"
+        xmlns:view="clr-namespace:portal_compare.View"
         mc:Ignorable="d"
         Title="MainWindow" Height="350" Width="525">
     <Grid>
-        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <TabControl Grid.Row="1" SelectedIndex="0" Name="TabControl">
+            <TabItem x:Name="Credentials" Header="Credentials">
+                <view:CredentialsView Height="Auto" />
+            </TabItem>
+            <TabItem x:Name="Group_Compare" Header="Group Compare">
+                <view:GroupsView Height="Auto" />
+            </TabItem>
+        </TabControl>
+
     </Grid>
 </Window>

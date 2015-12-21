@@ -12,18 +12,22 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using portal_compare.Model;
+using portal_compare.ViewModel;
 
-namespace portal_compare
+namespace portal_compare.View
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for CredentialsView.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class CredentialsView : UserControl
     {
-        public MainWindow()
+        public CredentialsView()
         {
             InitializeComponent();
-            App.TabControl = TabControl;
+            DataContext = new CredentialsViewModel();
+
+           
         }
     }
 }

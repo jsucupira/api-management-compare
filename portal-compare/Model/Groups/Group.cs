@@ -1,3 +1,7 @@
+using System.Windows.Media;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
+
 namespace portal_compare.Model.Groups
 {
     public class Group

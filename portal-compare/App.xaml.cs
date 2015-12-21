@@ -5,6 +5,8 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using portal_compare.Model;
 
 namespace portal_compare
 {
@@ -13,5 +15,7 @@ namespace portal_compare
     /// </summary>
     public partial class App : Application
     {
+        public static Credentials Credentials { get; set; }
+        public static TabControl TabControl;
     }
 }
