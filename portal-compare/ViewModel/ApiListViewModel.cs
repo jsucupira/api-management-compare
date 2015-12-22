@@ -42,10 +42,17 @@ namespace portal_compare.ViewModel
             }
             else
             {
-                HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
-                ApiWrapper sourceApi = sourceClient.Get<ApiWrapper>("/apis");
-                if (sourceApi != null)
-                    ApiList = new ObservableCollection<Api>(sourceApi.value);
+                try
+                {
+                    HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
+                    ApiWrapper sourceApi = sourceClient.Get<ApiWrapper>("/apis");
+                    if (sourceApi != null)
+                        ApiList = new ObservableCollection<Api>(sourceApi.value);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error");
+                }
             }
         }
 
@@ -58,15 +65,22 @@ namespace portal_compare.ViewModel
                 App.SourceApi = _currentApi;
                 OnPropertyChanged(nameof(CurrentApi));
 
-                HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
-                ApiWrapper targetApi = targetClient.Get<ApiWrapper>("/apis");
-                if (targetApi?.value != null && targetApi.value.Any())
+                try
                 {
-                    App.TargetApi = targetApi.value.FirstOrDefault(t => t.Equals(_currentApi));
-                    if (App.TargetApi == null)
+                    HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
+                    ApiWrapper targetApi = targetClient.Get<ApiWrapper>("/apis");
+                    if (targetApi?.value != null && targetApi.value.Any())
                     {
-                        MessageBox.Show($"The API {_currentApi.name} doesn't exist in the target system");
+                        App.TargetApi = targetApi.value.FirstOrDefault(t => t.name.Equals(_currentApi.name, StringComparison.OrdinalIgnoreCase));
+                        if (App.TargetApi == null)
+                        {
+                            MessageBox.Show($"The API {_currentApi.name} doesn't exist in the target system");
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error");
                 }
             }
         }

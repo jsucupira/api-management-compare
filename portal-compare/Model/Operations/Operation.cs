@@ -4,9 +4,9 @@ namespace portal_compare.Model.Operations
 {
     public class Operation
     {
-        public Operation(string apiId, string operationId)
+        public Operation(string apiId)
         {
-            id = $"/apis/{apiId}/operations/{operationId}";
+            id = apiId;
         }
 
         public string id { get; set; }
@@ -31,9 +31,9 @@ namespace portal_compare.Model.Operations
             return false;
         }
 
-        private bool Equals(Operation other)
+        public bool Equals(Operation other)
         {
-            return string.Equals(name, other.name, StringComparison.OrdinalIgnoreCase) && string.Equals(method, other.method, StringComparison.OrdinalIgnoreCase) && string.Equals(urlTemplate, other.urlTemplate, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(name, other.name, StringComparison.OrdinalIgnoreCase) && string.Equals(method, other.method, StringComparison.OrdinalIgnoreCase) && string.Equals(urlTemplate, other.urlTemplate, StringComparison.OrdinalIgnoreCase) && string.Equals(description, other.description, StringComparison.OrdinalIgnoreCase);
         }
 
         public override int GetHashCode()
@@ -43,6 +43,7 @@ namespace portal_compare.Model.Operations
                 int hashCode = name?.GetHashCode() ?? 0;
                 hashCode = (hashCode*397) ^ (method?.GetHashCode() ?? 0);
                 hashCode = (hashCode*397) ^ (urlTemplate?.GetHashCode() ?? 0);
+                hashCode = (hashCode*397) ^ (description?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }

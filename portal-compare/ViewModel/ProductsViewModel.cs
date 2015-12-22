@@ -17,10 +17,13 @@ namespace portal_compare.ViewModel
         private ObservableCollection<string> _source;
         private string _targetDifferences;
         private ObservableCollection<string> _target;
+        private List<Product> _sourceList;
+        private List<Product> _targetList;
 
         public ProductsViewModel()
         {
             CompareCommand = new RelayCommand(Compare);
+            AddToTargetCommand = new RelayCommand(AddToTarget);
         }
 
         public RelayCommand CompareCommand { get; private set; }
@@ -78,41 +81,108 @@ namespace portal_compare.ViewModel
                 HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
                 HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
 
-                ProductWrapper sourceProduct = sourceClient.Get<ProductWrapper>("/products");
-                ProductWrapper targetProduct = targetClient.Get<ProductWrapper>("/products");
-
-                if (sourceProduct?.value != null && targetProduct?.value != null)
+                try
                 {
-                    Source = new ObservableCollection<string>();
-                    Target = new ObservableCollection<string>();
+                    ProductWrapper sourceProduct = sourceClient.Get<ProductWrapper>("/products");
+                    ProductWrapper targetProduct = targetClient.Get<ProductWrapper>("/products");
 
-                    SourceDifferences = $"There are {sourceProduct.value.Count()} product in the source system.";
-                    TargetDifferences = $"There are {targetProduct.value.Count()} product in the target system.";
-                    int sourceDifferences = 0;
-                    int targetDifferences = 0;
-
-                    foreach (Product sourceGroup in sourceProduct.value)
+                    if (sourceProduct?.value != null && targetProduct?.value != null)
                     {
-                        Product target = targetProduct.value.FirstOrDefault(t => t.Equals(sourceGroup));
-                        if (target == null)
+                        Source = new ObservableCollection<string>();
+                        Target = new ObservableCollection<string>();
+                        _sourceList = sourceProduct.value.ToList();
+                        _targetList = targetProduct.value.ToList();
+
+                        SourceDifferences = $"{sourceProduct.value.Count()} product(s) in the source system.";
+                        TargetDifferences = $"{targetProduct.value.Count()} product(s) in the target system.";
+                        int sourceDifferences = 0;
+                        int targetDifferences = 0;
+
+                        foreach (Product sourceGroup in sourceProduct.value)
                         {
-                            sourceDifferences += 1;
-                            Source.Add(sourceGroup.ToString());
+                            Product target = targetProduct.value.FirstOrDefault(t => t.Equals(sourceGroup));
+                            if (target == null)
+                            {
+                                sourceDifferences += 1;
+                                Source.Add(sourceGroup.ToString());
+                            }
+                        }
+
+                        foreach (Product targetGroup in targetProduct.value)
+                        {
+                            Product source = sourceProduct.value.FirstOrDefault(t => t.Equals(targetGroup));
+                            if (source == null)
+                            {
+                                targetDifferences += 1;
+                                Target.Add(targetGroup.ToString());
+                            }
+                        }
+
+                        SourceDifferences += Environment.NewLine + $"{sourceDifferences} product(s) that is different in target.";
+                        TargetDifferences += Environment.NewLine + $"{targetDifferences} product(s) that is different in source.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error");
+                }
+            }
+        }
+
+        public RelayCommand AddToTargetCommand { get; set; }
+
+        private void AddToTarget(object name)
+        {
+            if (!string.IsNullOrEmpty(name as string))
+            {
+                Product original = _sourceList.FirstOrDefault(t => t.ToString().Equals(name.ToString(), StringComparison.OrdinalIgnoreCase));
+                if (original != null)
+                {
+                    Product target = _targetList.FirstOrDefault(t => t.name.Equals(original.name.ToString(), StringComparison.OrdinalIgnoreCase));
+                    HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
+                    if (target == null)
+                    {
+                        //Adding new
+                        MessageBoxResult result = MessageBox.Show($"Are you sure you want to add '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo);
+                        if (result == MessageBoxResult.Yes)
+                        {
+                            try
+                            {
+                                //https://msdn.microsoft.com/en-us/library/azure/dn776336.aspx?f=255&MSPPError=-2147217396#CreateProduct
+                                targetClient.Put($"{original.id}", original);
+                                MessageBox.Show("Product has been added.");
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message, "Error");
+                            }
                         }
                     }
-
-                    foreach (Product targetGroup in targetProduct.value)
+                    else
                     {
-                        Product source = sourceProduct.value.FirstOrDefault(t => t.Equals(targetGroup));
-                        if (source == null)
+                        //Update existing
+                        MessageBoxResult result = MessageBox.Show($"Are you sure you want to update '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo);
+                        if (result == MessageBoxResult.Yes)
                         {
-                            targetDifferences += 1;
-                            Target.Add(targetGroup.ToString());
+                            try
+                            {
+                                //https://msdn.microsoft.com/en-us/library/azure/dn776336.aspx?f=255&MSPPError=-2147217396#UpdateProduct
+                                target.name = original.name;
+                                target.description = original.description;
+                                target.terms = original.terms;
+                                target.subscriptionRequired = original.subscriptionRequired;
+                                target.approvalRequired = original.approvalRequired;
+                                target.subscriptionsLimit = original.subscriptionsLimit;
+                                target.state = original.state;
+                                targetClient.Patch($"{target.id}", target);
+                                MessageBox.Show("Product has been updated.");
+                            }
+                            catch (Exception ex)
+                            {
+                                MessageBox.Show(ex.Message, "Error");
+                            }
                         }
                     }
-
-                    SourceDifferences += Environment.NewLine + $"There are {sourceDifferences} product that exist in the source system, but not in the target.";
-                    TargetDifferences += Environment.NewLine + $"There are {targetDifferences} product that exist in the target system, but not in the source.";
                 }
             }
         }

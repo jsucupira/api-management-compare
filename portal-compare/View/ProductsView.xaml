@@ -28,6 +28,19 @@
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Name"></GridViewColumn>
+                        <GridViewColumn Header="Merge">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="6,2,6,2">
+                                        <Button Content="Merge" Command="{Binding 
+                                   Path=DataContext.AddToTargetCommand, 
+                                   RelativeSource= {RelativeSource FindAncestor, 
+                                   AncestorType={x:Type ItemsControl}}}"
+                                                CommandParameter="{Binding}"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>

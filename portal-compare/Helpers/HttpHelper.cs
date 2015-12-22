@@ -7,6 +7,7 @@ using System.Net.Http.Headers;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using Newtonsoft.Json;
 using portal_compare.Model;
 
@@ -28,7 +29,7 @@ namespace portal_compare.Helpers
 
         public T Get<T>(string operation)
         {
-            using (var client = new HttpClient() {BaseAddress = new Uri(_baseAddress)})
+            using (HttpClient client = new HttpClient() { BaseAddress = new Uri(_baseAddress) })
             {
                 DateTime expiry = DateTime.UtcNow.AddDays(1);
                 string sharedAccessSignature = CreateSharedAccessToken(_api, _key, expiry);
@@ -43,14 +44,66 @@ namespace portal_compare.Helpers
                 request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
                 HttpResponseMessage response = client.SendAsync(request).Result;
 
-                response.EnsureSuccessStatusCode();
                 if (response.IsSuccessStatusCode)
                 {
                     string json = response.Content.ReadAsStringAsync().Result;
                     T result = JsonConvert.DeserializeObject<T>(json);
                     return result;
                 }
-                return default(T);
+
+
+                string error = response.Content.ReadAsStringAsync().Result;
+                throw new Exception(error);
+            }
+        }
+
+        public void Put<T>(string operation, T data)
+        {
+            using (HttpClient client = new HttpClient() { BaseAddress = new Uri(_baseAddress) })
+            {
+                DateTime expiry = DateTime.UtcNow.AddDays(1);
+                string sharedAccessSignature = CreateSharedAccessToken(_api, _key, expiry);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("SharedAccessSignature", sharedAccessSignature);
+
+                if (operation.Contains("?"))
+                    operation += "&api-version=" + _apiVersion;
+                else
+                    operation += "?api-version=" + _apiVersion;
+
+                HttpResponseMessage response = client.PutAsJsonAsync(operation, data).Result;
+                if (!response.IsSuccessStatusCode)
+                {
+                    string error = response.Content.ReadAsStringAsync().Result;
+                    throw new Exception(error);
+                }
+            }
+        }
+
+        public void Patch<T>(string operation, T data)
+        {
+            using (HttpClient client = new HttpClient() { BaseAddress = new Uri(_baseAddress) })
+            {
+                DateTime expiry = DateTime.UtcNow.AddDays(1);
+                string sharedAccessSignature = CreateSharedAccessToken(_api, _key, expiry);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("SharedAccessSignature", sharedAccessSignature);
+
+                if (operation.Contains("?"))
+                    operation += "&api-version=" + _apiVersion;
+                else
+                    operation += "?api-version=" + _apiVersion;
+
+                using (HttpContent content = new StringContent(JsonConvert.SerializeObject(data)))
+                {
+                    content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/json");
+                    HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("PATCH"), operation) { Content = content };
+                    request.Headers.Add("If-Match", "*");
+                    HttpResponseMessage response = client.SendAsync(request).Result;
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string error = response.Content.ReadAsStringAsync().Result;
+                        throw new Exception(error);
+                    }
+                }
             }
         }
 

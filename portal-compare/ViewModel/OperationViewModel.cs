@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using portal_compare.Helpers;
 using portal_compare.Model.Operations;
+using portal_compare.Model.Products;
 
 namespace portal_compare.ViewModel
 {
@@ -13,10 +15,14 @@ namespace portal_compare.ViewModel
         private string _sourceDifferences;
         private ObservableCollection<string> _target;
         private string _targetDifferences;
+        private List<Operation> _sourceList;
+        private List<Operation> _targetList;
 
         public OperationViewModel()
         {
             CompareCommand = new RelayCommand(Compare);
+            AddToTargetCommand = new RelayCommand(AddToTarget);
+            MergeAllCommand = new RelayCommand(MergeAll);
         }
 
         public RelayCommand CompareCommand { get; private set; }
@@ -78,48 +84,158 @@ namespace portal_compare.ViewModel
                 HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
                 HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
 
-                OperationWrapper sourceOperationWrapper = sourceClient.Get<OperationWrapper>($"{App.SourceApi.id}?export=true");
-                
-                OperationWrapper targetOperationWrapper = targetClient.Get<OperationWrapper>($"{App.TargetApi.id}?export=true");
-
-                if (sourceOperationWrapper?.operations != null && targetOperationWrapper?.operations!= null)
+                try
                 {
-                    var sourceOperation = sourceOperationWrapper.operations;
-                    var targetOperation = targetOperationWrapper.operations;
+                    OperationWrapper sourceOperationWrapper = sourceClient.Get<OperationWrapper>($"{App.SourceApi.id}?export=true");
+                    OperationWrapper targetOperationWrapper = targetClient.Get<OperationWrapper>($"{App.TargetApi.id}?export=true");
 
-                    if (sourceOperation?.value != null && targetOperation?.value != null)
+                    if (sourceOperationWrapper?.operations != null && targetOperationWrapper?.operations != null)
                     {
-                        Source = new ObservableCollection<string>();
-                        Target = new ObservableCollection<string>();
+                        var sourceOperation = sourceOperationWrapper.operations;
+                        var targetOperation = targetOperationWrapper.operations;
 
-                        SourceDifferences = $"There are {sourceOperation.value.Count()} Operation in the source system.";
-                        TargetDifferences = $"There are {targetOperation.value.Count()} Operation in the target system.";
-                        int sourceDifferences = 0;
-                        int targetDifferences = 0;
-
-                        foreach (Operation sourceGroup in sourceOperation.value)
+                        if (sourceOperation?.value != null && targetOperation?.value != null)
                         {
-                            Operation target = targetOperation.value.FirstOrDefault(t => t.Equals(sourceGroup));
-                            if (target == null)
-                            {
-                                sourceDifferences += 1;
-                                Source.Add(sourceGroup.ToString());
-                            }
-                        }
+                            Source = new ObservableCollection<string>();
+                            Target = new ObservableCollection<string>();
+                            _sourceList = sourceOperation.value.ToList();
+                            _targetList = targetOperation.value.ToList();
 
-                        foreach (Operation targetGroup in targetOperation.value)
-                        {
-                            Operation source = sourceOperation.value.FirstOrDefault(t => t.Equals(targetGroup));
-                            if (source == null)
-                            {
-                                targetDifferences += 1;
-                                Target.Add(targetGroup.ToString());
-                            }
-                        }
+                            SourceDifferences = $"{sourceOperation.value.Count()} operation(s) in the source system.";
+                            TargetDifferences = $"{targetOperation.value.Count()} operation(s) in the target system.";
+                            int sourceDifferences = 0;
+                            int targetDifferences = 0;
 
-                        SourceDifferences += Environment.NewLine + $"There are {sourceDifferences} Operation that exist in the source system, but not in the target.";
-                        TargetDifferences += Environment.NewLine + $"There are {targetDifferences} Operation that exist in the target system, but not in the source.";
+                            foreach (Operation sourceGroup in sourceOperation.value)
+                            {
+                                Operation target = targetOperation.value.FirstOrDefault(t => t.Equals(sourceGroup));
+                                if (target == null)
+                                {
+                                    sourceDifferences += 1;
+                                    Source.Add(sourceGroup.ToString());
+                                }
+                            }
+
+                            foreach (Operation targetGroup in targetOperation.value)
+                            {
+                                Operation source = sourceOperation.value.FirstOrDefault(t => t.Equals(targetGroup));
+                                if (source == null)
+                                {
+                                    targetDifferences += 1;
+                                    Target.Add(targetGroup.ToString());
+                                }
+                            }
+
+                            SourceDifferences += Environment.NewLine + $"{sourceDifferences} operation(s) that is different in target.";
+                            TargetDifferences += Environment.NewLine + $"{targetDifferences} operation(s) that is different in source.";
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error");
+                }
+            }
+        }
+
+        public RelayCommand MergeAllCommand { get; set; }
+
+        public RelayCommand AddToTargetCommand { get; set; }
+
+        private void AddToTarget(object name)
+        {
+            if (!string.IsNullOrEmpty(name as string))
+            {
+                AddOperation(name as string, true);
+            }
+        }
+
+        private void AddOperation(string name, bool askConfirmation)
+        {
+            var original = _sourceList.FirstOrDefault(t => t.ToString().Equals(name.ToString(), StringComparison.OrdinalIgnoreCase));
+            if (original != null)
+            {
+                var target = _targetList.FirstOrDefault(t => t.name.Equals(original.name.ToString(), StringComparison.OrdinalIgnoreCase));
+                HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
+                if (target == null)
+                {
+                    //Adding new
+                    var result = true;
+                    if (askConfirmation)
+                    {
+                        result = MessageBox.Show($"Are you sure you want to add '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+                    }
+
+                    if (result)
+                    {
+                        string id = original.id.Replace(App.SourceApi.id, App.TargetApi.id);
+                        target = new Operation(id);
+                        target.name = original.name;
+                        target.description = original.description;
+                        target.method = original.method;
+                        target.urlTemplate = original.urlTemplate;
+                        target.request = original.request;
+                        target.responses = original.responses;
+                        try
+                        {
+                            //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#CreateOperation
+                            targetClient.Put($"{target.id}", original);
+                            if (askConfirmation)
+                                MessageBox.Show("Operation has been added.");
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Error");
+                        }
+                    }
+                }
+                else
+                {
+                    //Update existing
+                    var result = true;
+                    if (askConfirmation)
+                       result = MessageBox.Show($"Are you sure you want to update '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+
+                    if (result)
+                    {
+                        //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#UpdateOperation
+                        target.name = original.name;
+                        target.description = original.description;
+                        target.method = original.method;
+                        target.urlTemplate = original.urlTemplate;
+                        target.request = original.request;
+                        target.responses = original.responses;
+                        try
+                        {
+                            targetClient.Patch($"{target.id}", target);
+                            if (askConfirmation)
+                                MessageBox.Show("Operation has been updated.");
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Error");
+                        }
+                    }
+                }
+            }
+        }
+
+        private void MergeAll(object notUsed)
+        {
+            if (App.SourceApi == null || App.TargetApi == null)
+            {
+                MessageBox.Show("Please select the api.", "Error", MessageBoxButton.OK);
+            }
+            else
+            {
+                var result = MessageBox.Show("Are you sure you want to merge all the operations?", "Warning", MessageBoxButton.YesNo);
+                if (result == MessageBoxResult.Yes)
+                {
+                    foreach (Operation operation in _sourceList)
+                    {
+                        AddOperation(operation.ToString(), false);
+                    }
+                    MessageBox.Show("Merge Completed.");
                 }
             }
         }

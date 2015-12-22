@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 using portal_compare.Helpers;
 using portal_compare.Model.Apis;
+using portal_compare.Model.Products;
 
 namespace portal_compare.ViewModel
 {
@@ -13,10 +15,13 @@ namespace portal_compare.ViewModel
         private string _sourceDifferences;
         private ObservableCollection<string> _target;
         private string _targetDifferences;
+        private List<Api> _sourceList;
+        private List<Api> _targetList;
 
         public ApiViewModel()
         {
             CompareCommand = new RelayCommand(Compare);
+            AddToTargetCommand = new RelayCommand(AddToTarget);
         }
 
         public RelayCommand CompareCommand { get; private set; }
@@ -74,41 +79,100 @@ namespace portal_compare.ViewModel
                 HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
                 HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
 
-                ApiWrapper sourceApi = sourceClient.Get<ApiWrapper>("/apis");
-                ApiWrapper targetApi = targetClient.Get<ApiWrapper>("/apis");
-
-                if (sourceApi?.value != null && targetApi?.value != null)
+                try
                 {
-                    Source = new ObservableCollection<string>(); Target = new ObservableCollection<string>();
-                    Target = new ObservableCollection<string>();
+                    ApiWrapper sourceApi = sourceClient.Get<ApiWrapper>("/apis");
+                    ApiWrapper targetApi = targetClient.Get<ApiWrapper>("/apis");
 
-                    SourceDifferences = $"There are {sourceApi.value.Count()} Api in the source system.";
-                    TargetDifferences = $"There are {targetApi.value.Count()} Api in the target system.";
-                    int sourceDifferences = 0;
-                    int targetDifferences = 0;
-
-                    foreach (Api sourceGroup in sourceApi.value)
+                    if (sourceApi?.value != null && targetApi?.value != null)
                     {
-                        Api target = targetApi.value.FirstOrDefault(t => t.Equals(sourceGroup));
+                        Source = new ObservableCollection<string>(); Target = new ObservableCollection<string>();
+                        Target = new ObservableCollection<string>();
+                        _sourceList = sourceApi.value.ToList();
+                        _targetList = targetApi.value.ToList();
+
+                        SourceDifferences = $"{sourceApi.value.Count()} API(s) in the source system.";
+                        TargetDifferences = $"{targetApi.value.Count()} API(s) in the target system.";
+                        int sourceDifferences = 0;
+                        int targetDifferences = 0;
+
+                        foreach (Api sourceGroup in sourceApi.value)
+                        {
+                            Api target = targetApi.value.FirstOrDefault(t => t.Equals(sourceGroup));
+                            if (target == null)
+                            {
+                                sourceDifferences += 1;
+                                Source.Add(sourceGroup.ToString());
+                            }
+                        }
+
+                        foreach (Api targetGroup in targetApi.value)
+                        {
+                            Api source = sourceApi.value.FirstOrDefault(t => t.Equals(targetGroup));
+                            if (source == null)
+                            {
+                                targetDifferences += 1;
+                                Target.Add(targetGroup.ToString());
+                            }
+                        }
+
+                        SourceDifferences += Environment.NewLine + $"{sourceDifferences} API(s) that is different in target.";
+                        TargetDifferences += Environment.NewLine + $"{targetDifferences} API(s) that is different in source.";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error");
+                }
+            }
+        }
+
+
+        public RelayCommand AddToTargetCommand { get; set; }
+
+        private void AddToTarget(object name)
+        {
+            if (!string.IsNullOrEmpty(name as string))
+            {
+                try
+                {
+                    Api original = _sourceList.FirstOrDefault(t => t.ToString().Equals(name.ToString(), StringComparison.OrdinalIgnoreCase));
+                    if (original != null)
+                    {
+                        Api target = _targetList.FirstOrDefault(t => t.name.Equals(original.name.ToString(), StringComparison.OrdinalIgnoreCase));
+                        HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
                         if (target == null)
                         {
-                            sourceDifferences += 1;
-                            Source.Add(sourceGroup.ToString());
+                            //Adding new
+                            MessageBoxResult result = MessageBox.Show($"Are you sure you want to add '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo);
+                            if (result == MessageBoxResult.Yes)
+                            {
+                                //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#CreateAPI
+                                targetClient.Put($"{original.id}", original);
+                                MessageBox.Show("API has been added.");
+                            }
                         }
-                    }
-
-                    foreach (Api targetGroup in targetApi.value)
-                    {
-                        Api source = sourceApi.value.FirstOrDefault(t => t.Equals(targetGroup));
-                        if (source == null)
+                        else
                         {
-                            targetDifferences += 1;
-                            Target.Add(targetGroup.ToString());
+                            //Update existing
+                            MessageBoxResult result = MessageBox.Show($"Are you sure you want to update '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo);
+                            if (result == MessageBoxResult.Yes)
+                            {
+                                //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#UpdateAPI
+                                target.name = original.name;
+                                target.description = original.description;
+                                target.path = original.path;
+                                target.protocols = original.protocols;
+                                target.subscriptionKeyParameterNames = original.subscriptionKeyParameterNames;
+                                targetClient.Patch($"{target.id}", target);
+                                MessageBox.Show("API has been updated.");
+                            }
                         }
                     }
-
-                    SourceDifferences += Environment.NewLine + $"There are {sourceDifferences} Api that exist in the source system, but not in the target.";
-                    TargetDifferences += Environment.NewLine + $"There are {targetDifferences} Api that exist in the target system, but not in the source.";
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error");
                 }
             }
         }

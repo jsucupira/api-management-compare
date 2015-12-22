@@ -28,17 +28,20 @@ namespace portal_compare.Model.Groups
             return false;
         }
 
-        private bool Equals(Group other)
-        {
-            return string.Equals(name, other.name) && builtIn == other.builtIn;
-        }
-
         public override int GetHashCode()
         {
             unchecked
             {
-                return ((name?.GetHashCode() ?? 0)*397) ^ builtIn.GetHashCode();
+                int hashCode = name?.GetHashCode() ?? 0;
+                hashCode = (hashCode*397) ^ (description?.GetHashCode() ?? 0);
+                hashCode = (hashCode*397) ^ builtIn.GetHashCode();
+                return hashCode;
             }
+        }
+
+        private bool Equals(Group other)
+        {
+            return string.Equals(name, other.name, StringComparison.OrdinalIgnoreCase) && string.Equals(description, other.description, StringComparison.OrdinalIgnoreCase) && builtIn == other.builtIn;
         }
     }
 }

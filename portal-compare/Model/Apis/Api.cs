@@ -1,4 +1,5 @@
 using System;
+using Newtonsoft.Json;
 using portal_compare.Model.Operations;
 
 namespace portal_compare.Model.Apis
@@ -11,7 +12,10 @@ namespace portal_compare.Model.Apis
         public string serviceUrl { get; set; }
         public string path { get; set; }
         public string[] protocols { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public AuthenticationSettings authenticationSettings { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public SubscriptionKeyParameterNames subscriptionKeyParameterNames { get; set; }
 
         public override string ToString()
@@ -30,7 +34,7 @@ namespace portal_compare.Model.Apis
 
         private bool Equals(Api other)
         {
-            return string.Equals(name, other.name, StringComparison.OrdinalIgnoreCase) && string.Equals(path, other.path, StringComparison.OrdinalIgnoreCase);
+            return string.Equals(name, other.name, StringComparison.OrdinalIgnoreCase) && string.Equals(description, other.description, StringComparison.OrdinalIgnoreCase) && string.Equals(path, other.path, StringComparison.OrdinalIgnoreCase);
         }
 
         public override int GetHashCode()
@@ -38,7 +42,10 @@ namespace portal_compare.Model.Apis
             unchecked
             {
                 int hashCode = name?.GetHashCode() ?? 0;
+                hashCode = (hashCode*397) ^ (description?.GetHashCode() ?? 0);
                 hashCode = (hashCode*397) ^ (path?.GetHashCode() ?? 0);
+                hashCode = (hashCode*397) ^ (protocols?.GetHashCode() ?? 0);
+                hashCode = (hashCode*397) ^ (subscriptionKeyParameterNames?.GetHashCode() ?? 0);
                 return hashCode;
             }
         }
