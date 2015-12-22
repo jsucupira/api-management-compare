@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:portal_compare"
         xmlns:view="clr-namespace:portal_compare.View"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="MainWindow" Height="800" Width="1250">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -16,8 +16,17 @@
             <TabItem x:Name="Credentials" Header="Credentials">
                 <view:CredentialsView Height="Auto" />
             </TabItem>
-            <TabItem x:Name="Group_Compare" Header="Group Compare">
+            <TabItem Header="Group Compare">
                 <view:GroupsView Height="Auto" />
+            </TabItem>
+            <TabItem Header="Product Compare">
+                <view:ProductsView Height="Auto" />
+            </TabItem>
+            <TabItem Header="Api Compare">
+                <view:ApisView Height="Auto" />
+            </TabItem>
+            <TabItem Header="Operation Compare">
+                <view:OperationView Height="Auto" />
             </TabItem>
         </TabControl>
 

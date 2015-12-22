@@ -65,15 +65,31 @@
     </ApplicationDefinition>
     <Compile Include="Helpers\HttpHelper.cs" />
     <Compile Include="Model\Credentials.cs" />
+    <Compile Include="ViewModel\ApiListViewModel.cs" />
+    <Compile Include="ViewModel\OperationViewModel.cs" />
     <Compile Include="ViewModel\CredentialsViewModel.cs" />
     <Compile Include="Helpers\RelayCommand.cs" />
     <Compile Include="ViewModel\GroupsViewModel.cs" />
+    <Compile Include="ViewModel\ApiViewModel.cs" />
+    <Compile Include="ViewModel\ProductsViewModel.cs" />
     <Compile Include="ViewModel\ViewModelBase.cs" />
+    <Compile Include="View\ApiListView.xaml.cs">
+      <DependentUpon>ApiListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ApisView.xaml.cs">
+      <DependentUpon>ApisView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="View\CredentialsView.xaml.cs">
       <DependentUpon>CredentialsView.xaml</DependentUpon>
     </Compile>
     <Compile Include="View\GroupsView.xaml.cs">
       <DependentUpon>GroupsView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\OperationView.xaml.cs">
+      <DependentUpon>OperationView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="View\ProductsView.xaml.cs">
+      <DependentUpon>ProductsView.xaml</DependentUpon>
     </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -87,11 +103,27 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="View\ApiListView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ApisView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="View\CredentialsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="View\GroupsView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\OperationView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="View\ProductsView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

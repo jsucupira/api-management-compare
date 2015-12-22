@@ -17,7 +17,6 @@ namespace portal_compare.Helpers
         private readonly string _baseAddress;
         private readonly string _api;
         private readonly string _key;
-        private HttpClient _client;
         private string _apiVersion = "2014-02-14-preview";
 
         public HttpHelper(string serviceName, string api, string key)
@@ -29,34 +28,35 @@ namespace portal_compare.Helpers
 
         public T Get<T>(string operation)
         {
-            HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, operation + "?api-version=" + _apiVersion);
-            HttpResponseMessage response = GetClient().SendAsync(request).Result;
-
-            response.EnsureSuccessStatusCode();
-            if (response.IsSuccessStatusCode)
-            {
-                string json = response.Content.ReadAsStringAsync().Result;
-                T result = JsonConvert.DeserializeObject<T>(json);
-                return result;
-            }
-            return default(T);
-        }
-
-        private HttpClient GetClient()
-        {
-            if (_client == null)
+            using (var client = new HttpClient() {BaseAddress = new Uri(_baseAddress)})
             {
                 DateTime expiry = DateTime.UtcNow.AddDays(1);
                 string sharedAccessSignature = CreateSharedAccessToken(_api, _key, expiry);
-                _client = new HttpClient() { BaseAddress = new Uri(_baseAddress) };
-                _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("SharedAccessSignature", sharedAccessSignature);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("SharedAccessSignature", sharedAccessSignature);
+
+                if (operation.Contains("?"))
+                    operation += "&api-version=" + _apiVersion;
+                else
+                    operation += "?api-version=" + _apiVersion;
+
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, operation);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+                HttpResponseMessage response = client.SendAsync(request).Result;
+
+                response.EnsureSuccessStatusCode();
+                if (response.IsSuccessStatusCode)
+                {
+                    string json = response.Content.ReadAsStringAsync().Result;
+                    T result = JsonConvert.DeserializeObject<T>(json);
+                    return result;
+                }
+                return default(T);
             }
-            return _client;
         }
 
         private static string CreateSharedAccessToken(string id, string key, DateTime expiry)
         {
-            using (var encoder = new HMACSHA512(Encoding.UTF8.GetBytes(key)))
+            using (HMACSHA512 encoder = new HMACSHA512(Encoding.UTF8.GetBytes(key)))
             {
                 string dataToSign = id + "\n" + expiry.ToString("O", CultureInfo.InvariantCulture);
                 string x = $"{id}\n{expiry.ToString("O", CultureInfo.InvariantCulture)}";

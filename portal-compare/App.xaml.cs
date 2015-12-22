@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using portal_compare.Model;
+using portal_compare.Model.Apis;
 
 namespace portal_compare
 {
@@ -16,6 +17,9 @@ namespace portal_compare
     public partial class App : Application
     {
         public static Credentials Credentials { get; set; }
-        public static TabControl TabControl;
+        public static Api SourceApi { get; set; }
+
+        public static TabControl TabControl { get; set; }
+        public static Api TargetApi { get; set; }
     }
 }

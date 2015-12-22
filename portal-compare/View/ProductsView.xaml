@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="portal_compare.View.GroupsView"
+﻿<UserControl x:Class="portal_compare.View.ProductsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -23,21 +23,22 @@
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding Path=SourceDifferences}"/>
             <TextBlock Grid.Row="1" Grid.Column="0" Text="List of Differences"/>
-            <ListView Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" ItemsSource="{Binding Path=SourceGroups}">
-                
+            <ListView Grid.Row="2" Grid.Column="0" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" ItemsSource="{Binding Path=Source}">
+
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Name" />
+                        <GridViewColumn Header="Name"></GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>
 
             <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding Path=TargetDifferences}"/>
             <TextBlock Grid.Row="1" Grid.Column="1" Text="List of Differences"/>
-            <ListView Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" ItemsSource="{Binding Path=TargetGroups}">
+            <ListView Grid.Row="2" Grid.Column="1" HorizontalAlignment="Left" Margin="5,5,0,0" VerticalAlignment="Top" ItemsSource="{Binding Path=Target}">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Name" />
+                        <GridViewColumn Header="Name">
+                        </GridViewColumn>
                     </GridView>
                 </ListView.View>
             </ListView>

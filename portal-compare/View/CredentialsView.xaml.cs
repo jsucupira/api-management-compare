@@ -26,8 +26,6 @@ namespace portal_compare.View
         {
             InitializeComponent();
             DataContext = new CredentialsViewModel();
-
-           
         }
     }
 }

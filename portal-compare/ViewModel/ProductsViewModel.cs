@@ -1,20 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
 using portal_compare.Helpers;
 using portal_compare.Model.Groups;
+using portal_compare.Model.Products;
 
 namespace portal_compare.ViewModel
 {
-    public class GroupsViewModel : ViewModelBase
+    public class ProductsViewModel : ViewModelBase
     {
         private string _sourceDifferences;
-        private ObservableCollection<string> _sourceGroups;
+        private ObservableCollection<string> _source;
         private string _targetDifferences;
-        private ObservableCollection<string> _targetGroups;
+        private ObservableCollection<string> _target;
 
-        public GroupsViewModel()
+        public ProductsViewModel()
         {
             CompareCommand = new RelayCommand(Compare);
         }
@@ -31,13 +35,13 @@ namespace portal_compare.ViewModel
             }
         }
 
-        public ObservableCollection<string> SourceGroups
+        public ObservableCollection<string> Source
         {
-            get { return _sourceGroups; }
+            get { return _source; }
             set
             {
-                _sourceGroups = value;
-                OnPropertyChanged(nameof(SourceGroups));
+                _source = value;
+                OnPropertyChanged(nameof(Source));
             }
         }
 
@@ -51,13 +55,13 @@ namespace portal_compare.ViewModel
             }
         }
 
-        public ObservableCollection<string> TargetGroups
+        public ObservableCollection<string> Target
         {
-            get { return _targetGroups; }
+            get { return _target; }
             set
             {
-                _targetGroups = value;
-                OnPropertyChanged(nameof(TargetGroups));
+                _target = value;
+                OnPropertyChanged(nameof(Target));
             }
         }
 
@@ -74,40 +78,41 @@ namespace portal_compare.ViewModel
                 HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
                 HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
 
-                GroupWrapper sourceGroups = sourceClient.Get<GroupWrapper>("/groups");
-                GroupWrapper targetGroups = targetClient.Get<GroupWrapper>("/groups");
+                ProductWrapper sourceProduct = sourceClient.Get<ProductWrapper>("/products");
+                ProductWrapper targetProduct = targetClient.Get<ProductWrapper>("/products");
 
-                if (sourceGroups?.value != null && targetGroups?.value != null)
+                if (sourceProduct?.value != null && targetProduct?.value != null)
                 {
-                    TargetGroups = new ObservableCollection<string>();
-                    SourceGroups = new ObservableCollection<string>();
-                    SourceDifferences = $"There are {sourceGroups.value.Count()} groups in the source system.";
-                    TargetDifferences = $"There are {targetGroups.value.Count()} groups in the target system.";
+                    Source = new ObservableCollection<string>();
+                    Target = new ObservableCollection<string>();
+
+                    SourceDifferences = $"There are {sourceProduct.value.Count()} product in the source system.";
+                    TargetDifferences = $"There are {targetProduct.value.Count()} product in the target system.";
                     int sourceDifferences = 0;
                     int targetDifferences = 0;
 
-                    foreach (Group sourceGroup in sourceGroups.value)
+                    foreach (Product sourceGroup in sourceProduct.value)
                     {
-                        Group target = targetGroups.value.FirstOrDefault(t => t.Equals(sourceGroup));
+                        Product target = targetProduct.value.FirstOrDefault(t => t.Equals(sourceGroup));
                         if (target == null)
                         {
                             sourceDifferences += 1;
-                            SourceGroups.Add(sourceGroup.ToString());
+                            Source.Add(sourceGroup.ToString());
                         }
                     }
 
-                    foreach (Group targetGroup in targetGroups.value)
+                    foreach (Product targetGroup in targetProduct.value)
                     {
-                        Group source = sourceGroups.value.FirstOrDefault(t => t.Equals(targetGroup));
+                        Product source = sourceProduct.value.FirstOrDefault(t => t.Equals(targetGroup));
                         if (source == null)
                         {
                             targetDifferences += 1;
-                            TargetGroups.Add(targetGroup.ToString());
+                            Target.Add(targetGroup.ToString());
                         }
                     }
 
-                    SourceDifferences += Environment.NewLine + $"There are {sourceDifferences} groups that exist in the source system, but not in the target.";
-                    TargetDifferences += Environment.NewLine + $"There are {targetDifferences} groups that exist in the target system, but not in the source.";
+                    SourceDifferences += Environment.NewLine + $"There are {sourceDifferences} product that exist in the source system, but not in the target.";
+                    TargetDifferences += Environment.NewLine + $"There are {targetDifferences} product that exist in the target system, but not in the source.";
                 }
             }
         }

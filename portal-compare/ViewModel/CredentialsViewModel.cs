@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System;
+using System.IO;
+using System.Windows;
+using Newtonsoft.Json;
 using portal_compare.Helpers;
 using portal_compare.Model;
 
@@ -9,60 +9,61 @@ namespace portal_compare.ViewModel
 {
     public class CredentialsViewModel : ViewModelBase
     {
-        private string _sourceServiceName;
-        private string _sourceApi;
+        private bool _save;
+        private string _sourceId;
         private string _sourceKey;
-        private string _targetServiceName;
-        private string _targetApi;
+        private string _sourceServiceName;
+        private string _targetId;
         private string _targetKey;
+        private string _targetServiceName;
 
         public CredentialsViewModel()
         {
+            string pathDirectory = Directory.GetCurrentDirectory();
+            string fileName = $@"{pathDirectory}\credentials";
+            if (File.Exists(fileName))
+            {
+                try
+                {
+                    App.Credentials = JsonConvert.DeserializeObject<Credentials>(File.ReadAllText(fileName));
+                }
+                catch (Exception)
+                {
+                    File.Delete(fileName);
+                }
+            }
             if (App.Credentials != null)
             {
                 SourceServiceName = App.Credentials.SourceServiceName;
-                SourceApi = App.Credentials.SourceId;
+                SourceId = App.Credentials.SourceId;
                 SourceKey = App.Credentials.SourceKey;
                 TargetServiceName = App.Credentials.TargetServiceName;
-                TargetApi = App.Credentials.TargetApi;
+                TargetId = App.Credentials.TargetId;
                 TargetKey = App.Credentials.TargetKey;
             }
 
             SaveCommand = new RelayCommand(SetCredentials);
         }
 
-        private void SetCredentials(object obj)
+        public bool Save
         {
-            App.Credentials = new Credentials
+            get { return _save; }
+            set
             {
-                SourceId = SourceApi,
-                SourceKey = SourceKey,
-                SourceServiceName = SourceServiceName,
-                TargetApi = TargetApi,
-                TargetKey = TargetKey,
-                TargetServiceName = TargetServiceName
-            };
+                _save = value;
+                OnPropertyChanged(nameof(Save));
+            }
         }
 
         public RelayCommand SaveCommand { get; private set; }
 
-        public string SourceServiceName
+        public string SourceId
         {
-            get { return _sourceServiceName; }
+            get { return _sourceId; }
             set
             {
-                _sourceServiceName = value;
-                OnPropertyChanged(nameof(SourceServiceName));
-            }
-        }
-
-        public string SourceApi
-        {
-            get { return _sourceApi; }
-            set
-            {
-                _sourceApi = value;
-                OnPropertyChanged(nameof(SourceApi));
+                _sourceId = value;
+                OnPropertyChanged(nameof(SourceId));
             }
         }
 
@@ -76,23 +77,23 @@ namespace portal_compare.ViewModel
             }
         }
 
-        public string TargetServiceName
+        public string SourceServiceName
         {
-            get { return _targetServiceName; }
+            get { return _sourceServiceName; }
             set
             {
-                _targetServiceName = value;
-                OnPropertyChanged(nameof(TargetServiceName));
+                _sourceServiceName = value;
+                OnPropertyChanged(nameof(SourceServiceName));
             }
         }
 
-        public string TargetApi
+        public string TargetId
         {
-            get { return _targetApi; }
+            get { return _targetId; }
             set
             {
-                _targetApi = value;
-                OnPropertyChanged(nameof(TargetApi));
+                _targetId = value;
+                OnPropertyChanged(nameof(TargetId));
             }
         }
 
@@ -104,6 +105,44 @@ namespace portal_compare.ViewModel
                 _targetKey = value;
                 OnPropertyChanged(nameof(TargetKey));
             }
+        }
+
+        public string TargetServiceName
+        {
+            get { return _targetServiceName; }
+            set
+            {
+                _targetServiceName = value;
+                OnPropertyChanged(nameof(TargetServiceName));
+            }
+        }
+
+        private void SetCredentials(object obj)
+        {
+            App.Credentials = new Credentials
+            {
+                SourceId = SourceId,
+                SourceKey = SourceKey,
+                SourceServiceName = SourceServiceName,
+                TargetId = TargetId,
+                TargetKey = TargetKey,
+                TargetServiceName = TargetServiceName
+            };
+            string pathDirectory = Directory.GetCurrentDirectory();
+            string fileName = $@"{pathDirectory}\credentials";
+
+            if (Save)
+            {
+                string json = JsonConvert.SerializeObject(App.Credentials);
+                File.WriteAllText(fileName, json);
+            }
+            else
+            {
+                if (File.Exists(fileName))
+                    File.Delete(fileName);
+            }
+
+            MessageBox.Show("Saved", "Success", MessageBoxButton.OK);
         }
     }
 }
