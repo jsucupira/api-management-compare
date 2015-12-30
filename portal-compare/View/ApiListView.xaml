@@ -9,7 +9,6 @@
     <Grid x:Name="LayoutRoot" HorizontalAlignment="Stretch" ShowGridLines="True">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <ScrollViewer BorderThickness="5" VerticalScrollBarVisibility="Auto" VerticalAlignment="Top" HorizontalAlignment="Stretch" >
             <ItemsControl>
@@ -23,6 +22,5 @@
                 </ListView>
             </ItemsControl>
         </ScrollViewer>
-        <Button Grid.Row="1" Grid.Column="0" Margin="2" Command="{Binding LoadApiCommand}" >Load Apis</Button>
     </Grid>
 </UserControl>

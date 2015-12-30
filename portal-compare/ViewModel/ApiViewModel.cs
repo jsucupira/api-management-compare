@@ -20,11 +20,10 @@ namespace portal_compare.ViewModel
 
         public ApiViewModel()
         {
-            CompareCommand = new RelayCommand(Compare);
+            Compare();
             AddToTargetCommand = new RelayCommand(AddToTarget);
         }
 
-        public RelayCommand CompareCommand { get; private set; }
 
         public ObservableCollection<string> Source
         {
@@ -66,7 +65,7 @@ namespace portal_compare.ViewModel
             }
         }
 
-        private void Compare(object notUsed)
+        private void Compare()
         {
             if (App.Credentials == null)
             {
@@ -149,6 +148,7 @@ namespace portal_compare.ViewModel
                             {
                                 //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#CreateAPI
                                 targetClient.Put($"{original.id}", original);
+                                Compare();
                                 MessageBox.Show("API has been added.");
                             }
                         }
@@ -165,6 +165,7 @@ namespace portal_compare.ViewModel
                                 target.protocols = original.protocols;
                                 target.subscriptionKeyParameterNames = original.subscriptionKeyParameterNames;
                                 targetClient.Patch($"{target.id}", target);
+                                Compare();
                                 MessageBox.Show("API has been updated.");
                             }
                         }

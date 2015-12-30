@@ -19,11 +19,9 @@ namespace portal_compare.ViewModel
 
         public GroupsViewModel()
         {
-            CompareCommand = new RelayCommand(Compare);
+            Compare();
             AddToTargetCommand = new RelayCommand(AddToTarget);
         }
-
-        public RelayCommand CompareCommand { get; private set; }
 
         public string SourceDifferences
         {
@@ -65,7 +63,7 @@ namespace portal_compare.ViewModel
             }
         }
 
-        private void Compare(object notUsed)
+        private void Compare()
         {
             if (App.Credentials == null)
             {
@@ -147,6 +145,7 @@ namespace portal_compare.ViewModel
                             try
                             {
                                 targetClient.Put($"{original.id}", original.Map());
+                                Compare();
                                 MessageBox.Show("Group has been added.");
                             }
                             catch (Exception ex)
@@ -167,6 +166,7 @@ namespace portal_compare.ViewModel
                             try
                             {
                                 targetClient.Patch($"{target.id}", target.Map());
+                                Compare();
                                 MessageBox.Show("Group has been updated.");
                             }
                             catch (Exception ex)

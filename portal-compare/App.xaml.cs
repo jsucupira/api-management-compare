@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using portal_compare.Helpers;
 using portal_compare.Model;
 using portal_compare.Model.Apis;
 
@@ -21,5 +22,7 @@ namespace portal_compare
 
         public static TabControl TabControl { get; set; }
         public static Api TargetApi { get; set; }
+
+        public static RelayCommand LoadApiOperations;
     }
 }

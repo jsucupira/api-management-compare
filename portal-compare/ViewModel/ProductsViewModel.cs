@@ -22,11 +22,9 @@ namespace portal_compare.ViewModel
 
         public ProductsViewModel()
         {
-            CompareCommand = new RelayCommand(Compare);
+            Compare();
             AddToTargetCommand = new RelayCommand(AddToTarget);
         }
-
-        public RelayCommand CompareCommand { get; private set; }
 
         public string SourceDifferences
         {
@@ -68,7 +66,7 @@ namespace portal_compare.ViewModel
             }
         }
 
-        private void Compare(object notUsed)
+        private void Compare()
         {
             if (App.Credentials == null)
             {
@@ -150,6 +148,7 @@ namespace portal_compare.ViewModel
                             {
                                 //https://msdn.microsoft.com/en-us/library/azure/dn776336.aspx?f=255&MSPPError=-2147217396#CreateProduct
                                 targetClient.Put($"{original.id}", original);
+                                Compare();
                                 MessageBox.Show("Product has been added.");
                             }
                             catch (Exception ex)
@@ -175,6 +174,7 @@ namespace portal_compare.ViewModel
                                 target.subscriptionsLimit = original.subscriptionsLimit;
                                 target.state = original.state;
                                 targetClient.Patch($"{target.id}", target);
+                                Compare();
                                 MessageBox.Show("Product has been updated.");
                             }
                             catch (Exception ex)

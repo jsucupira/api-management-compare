@@ -27,12 +27,10 @@ namespace portal_compare.ViewModel
 
         public ApiListViewModel()
         {
-            LoadApiCommand = new RelayCommand(LoadApis);
+            LoadApis();
         }
 
-        public RelayCommand LoadApiCommand { get; set; }
-
-        private void LoadApis(object notUsed)
+        private void LoadApis()
         {
             if (App.Credentials == null)
             {
@@ -75,6 +73,13 @@ namespace portal_compare.ViewModel
                         if (App.TargetApi == null)
                         {
                             MessageBox.Show($"The API {_currentApi.name} doesn't exist in the target system");
+                        }
+                        else
+                        {
+                            if (App.LoadApiOperations != null)
+                            {
+                                App.LoadApiOperations.Execute();
+                            }
                         }
                     }
                 }

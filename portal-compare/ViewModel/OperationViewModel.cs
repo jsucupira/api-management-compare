@@ -20,12 +20,10 @@ namespace portal_compare.ViewModel
 
         public OperationViewModel()
         {
-            CompareCommand = new RelayCommand(Compare);
             AddToTargetCommand = new RelayCommand(AddToTarget);
             MergeAllCommand = new RelayCommand(MergeAll);
+            App.LoadApiOperations = new RelayCommand(Compare);
         }
-
-        public RelayCommand CompareCommand { get; private set; }
 
         public ObservableCollection<string> Source
         {
@@ -181,7 +179,11 @@ namespace portal_compare.ViewModel
                             //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#CreateOperation
                             targetClient.Put($"{target.id}", original);
                             if (askConfirmation)
+                            {
                                 MessageBox.Show("Operation has been added.");
+                                if (App.LoadApiOperations != null)
+                                    App.LoadApiOperations.Execute();
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -209,7 +211,11 @@ namespace portal_compare.ViewModel
                         {
                             targetClient.Patch($"{target.id}", target);
                             if (askConfirmation)
+                            {
                                 MessageBox.Show("Operation has been updated.");
+                                if (App.LoadApiOperations != null)
+                                    App.LoadApiOperations.Execute();
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -235,6 +241,8 @@ namespace portal_compare.ViewModel
                     {
                         AddOperation(operation.ToString(), false);
                     }
+                    if (App.LoadApiOperations != null)
+                        App.LoadApiOperations.Execute();
                     MessageBox.Show("Merge Completed.");
                 }
             }
