@@ -25,6 +25,7 @@ namespace portal_compare.Helpers
             _baseAddress = $"https://{serviceName}.management.azure-api.net";
             _api = api;
             _key = key;
+            //"test";
         }
 
         public T Get<T>(string operation)
