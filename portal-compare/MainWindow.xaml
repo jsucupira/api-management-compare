@@ -12,11 +12,11 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
-        <TabControl Grid.Row="1" SelectedIndex="0" Name="TabControl">
+        <TabControl Grid.Row="1" SelectedIndex="0" Name="TabControl" SelectionChanged="TabControl_SelectionChanged">
             <TabItem x:Name="Credentials" Header="Credentials">
                 <view:CredentialsView Height="Auto" />
             </TabItem>
-            <TabItem Header="Group Compare">
+            <TabItem Header="Group Compare" >
                 <view:GroupsView Height="Auto" />
             </TabItem>
             <TabItem Header="Product Compare">

@@ -19,8 +19,8 @@ namespace portal_compare.ViewModel
 
         public GroupsViewModel()
         {
-            Compare();
             AddToTargetCommand = new RelayCommand(AddToTarget);
+            App.CompareGroupCommand = new RelayCommand(Compare);
         }
 
         public string SourceDifferences
@@ -63,7 +63,7 @@ namespace portal_compare.ViewModel
             }
         }
 
-        private void Compare()
+        private void Compare(object notUsed = null)
         {
             if (App.Credentials == null)
             {
@@ -178,7 +178,5 @@ namespace portal_compare.ViewModel
                 }
             }
         }
-
-
     }
 }

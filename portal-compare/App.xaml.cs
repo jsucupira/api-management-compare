@@ -19,10 +19,12 @@ namespace portal_compare
     {
         public static Credentials Credentials { get; set; }
         public static Api SourceApi { get; set; }
-
         public static TabControl TabControl { get; set; }
         public static Api TargetApi { get; set; }
 
         public static RelayCommand LoadApiOperations;
+        public static RelayCommand CompareApiCommand;
+        public static RelayCommand CompareGroupCommand;
+        public static RelayCommand CompareProductCommand;
     }
 }

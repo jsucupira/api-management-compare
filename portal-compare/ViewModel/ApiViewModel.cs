@@ -20,10 +20,9 @@ namespace portal_compare.ViewModel
 
         public ApiViewModel()
         {
-            Compare();
             AddToTargetCommand = new RelayCommand(AddToTarget);
+            App.CompareApiCommand = new RelayCommand(Compare);
         }
-
 
         public ObservableCollection<string> Source
         {
@@ -65,7 +64,7 @@ namespace portal_compare.ViewModel
             }
         }
 
-        private void Compare()
+        private void Compare(object notUsed = null)
         {
             if (App.Credentials == null)
             {
@@ -125,7 +124,6 @@ namespace portal_compare.ViewModel
                 }
             }
         }
-
 
         public RelayCommand AddToTargetCommand { get; set; }
 

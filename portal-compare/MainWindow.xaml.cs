@@ -28,5 +28,27 @@ namespace portal_compare
             InitializeComponent();
             App.TabControl = TabControl;
         }
+
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            // ... Get TabControl reference.
+            TabControl item = sender as TabControl;
+            // ... Set Title to selected tab header.
+            if (item != null)
+            {
+                switch (item.SelectedIndex)
+                {
+                    case 1:
+                        App.CompareGroupCommand.Execute();
+                        break;
+                    case 2:
+                        App.CompareProductCommand.Execute();
+                        break;
+                    case 3:
+                        App.CompareApiCommand.Execute();
+                        break;
+                }
+            }
+        }
     }
 }

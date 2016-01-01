@@ -22,8 +22,8 @@ namespace portal_compare.ViewModel
 
         public ProductsViewModel()
         {
-            Compare();
             AddToTargetCommand = new RelayCommand(AddToTarget);
+            App.CompareProductCommand = new RelayCommand(Compare);
         }
 
         public string SourceDifferences
@@ -66,7 +66,7 @@ namespace portal_compare.ViewModel
             }
         }
 
-        private void Compare()
+        private void Compare(object notUsed = null)
         {
             if (App.Credentials == null)
             {
