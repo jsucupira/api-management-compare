@@ -36,17 +36,21 @@ namespace portal_compare
             // ... Set Title to selected tab header.
             if (item != null)
             {
-                switch (item.SelectedIndex)
+                if (App.CurrentTab != item.SelectedIndex)
                 {
-                    case 1:
-                        App.CompareGroupCommand.Execute();
-                        break;
-                    case 2:
-                        App.CompareProductCommand.Execute();
-                        break;
-                    case 3:
-                        App.CompareApiCommand.Execute();
-                        break;
+                    App.CurrentTab = item.SelectedIndex;
+                    switch (item.SelectedIndex)
+                    {
+                        case 1:
+                            App.CompareGroupCommand.Execute();
+                            break;
+                        case 2:
+                            App.CompareProductCommand.Execute();
+                            break;
+                        case 3:
+                            App.CompareApiCommand.Execute();
+                            break;
+                    }
                 }
             }
         }

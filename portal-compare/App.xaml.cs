@@ -26,5 +26,6 @@ namespace portal_compare
         public static RelayCommand CompareApiCommand;
         public static RelayCommand CompareGroupCommand;
         public static RelayCommand CompareProductCommand;
+        public static int CurrentTab = 0;
     }
 }

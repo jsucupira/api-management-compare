@@ -34,8 +34,7 @@
                                         <Button Content="Merge" Command="{Binding 
                                    Path=DataContext.AddToTargetCommand, 
                                    RelativeSource= {RelativeSource FindAncestor, 
-                                   AncestorType={x:Type ItemsControl}}}"
-                                                CommandParameter="{Binding}"/>
+                                   AncestorType={x:Type ItemsControl}}}" CommandParameter="{Binding}"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </GridViewColumn.CellTemplate>
