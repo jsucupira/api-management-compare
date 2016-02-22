@@ -34,8 +34,11 @@ namespace portal_compare.ViewModel
         {
             if (App.Credentials == null)
             {
-                object tab = App.TabControl.Items[0];
-                App.TabControl.SelectedItem = tab;
+                if (App.TabControl != null)
+                {
+                    object tab = App.TabControl.Items[0];
+                    App.TabControl.SelectedItem = tab;
+                }
                 MessageBox.Show("Please enter the API Management Credentials", "Error", MessageBoxButton.OK);
             }
             else
