@@ -4,7 +4,7 @@ namespace portal_compare.Model.Products
 {
     public class Product
     {
-        public bool approvalRequired { get; set; }
+        public bool? approvalRequired { get; set; }
         public string description { get; set; }
         public string id { get; set; }
         public string name { get; set; }

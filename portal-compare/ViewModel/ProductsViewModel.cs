@@ -120,9 +120,12 @@ namespace portal_compare.ViewModel
                         TargetDifferences += Environment.NewLine + $"{targetDifferences} product(s) that is different in source.";
                     }
                 }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "Error");
+                //catch (Exception ex)
+                //{
+                //    MessageBox.Show(ex.Message, "Error");
+                //}
+                finally {
+                    
                 }
             }
         }
