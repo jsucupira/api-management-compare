@@ -57,6 +57,56 @@ namespace portal_compare.Helpers
             }
         }
 
+        public string GetPolicy(string operationId)
+        {
+            using (HttpClient client = new HttpClient() { BaseAddress = new Uri(_baseAddress) })
+            {
+                DateTime expiry = DateTime.UtcNow.AddDays(1);
+                string sharedAccessSignature = CreateSharedAccessToken(_api, _key, expiry);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("SharedAccessSignature", sharedAccessSignature);
+
+                string operation = $"{operationId}/policy?api-version={_apiVersion}";
+
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Get, operation);
+                request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.ms-azure-apim.policy+xml"));
+                HttpResponseMessage response = client.SendAsync(request).Result;
+
+                if (response.IsSuccessStatusCode)
+                {
+                    return response.Content.ReadAsStringAsync().Result;
+                }
+
+
+                string error = response.Content.ReadAsStringAsync().Result;
+                throw new Exception(error);
+            }
+        }
+
+        public void SetPolicy(string policy, string operationId)
+        {
+            using (HttpClient client = new HttpClient() { BaseAddress = new Uri(_baseAddress) })
+            {
+                DateTime expiry = DateTime.UtcNow.AddDays(1);
+                string sharedAccessSignature = CreateSharedAccessToken(_api, _key, expiry);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("SharedAccessSignature", sharedAccessSignature);
+
+                string operation = $"{operationId}/policy?api-version={_apiVersion}";
+
+                using (HttpContent content = new StringContent(policy))
+                {
+                    content.Headers.ContentType = new MediaTypeWithQualityHeaderValue("application/vnd.ms-azure-apim.policy+xml");
+                    HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Put, operation) { Content = content };
+                    request.Headers.Add("If-Match", "*");
+                    HttpResponseMessage response = client.SendAsync(request).Result;
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        string error = response.Content.ReadAsStringAsync().Result;
+                        throw new Exception(error);
+                    }
+                }
+            }
+        }
+
         public void Put<T>(string operation, T data)
         {
             using (HttpClient client = new HttpClient() { BaseAddress = new Uri(_baseAddress) })
@@ -117,6 +167,23 @@ namespace portal_compare.Helpers
                 var signature = Convert.ToBase64String(hash);
                 string encodedToken = $"uid={id}&ex={expiry:o}&sn={signature}";
                 return encodedToken;
+            }
+        }
+
+        public bool CheckForPolicy(string operationId)
+        {
+            using (HttpClient client = new HttpClient() { BaseAddress = new Uri(_baseAddress) })
+            {
+                DateTime expiry = DateTime.UtcNow.AddDays(1);
+                string sharedAccessSignature = CreateSharedAccessToken(_api, _key, expiry);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("SharedAccessSignature", sharedAccessSignature);
+
+                string operation = $"{operationId}/policy?api-version={_apiVersion}";
+
+                HttpRequestMessage request = new HttpRequestMessage(HttpMethod.Head, operation);
+                HttpResponseMessage response = client.SendAsync(request).Result;
+
+                return response.IsSuccessStatusCode;
             }
         }
     }

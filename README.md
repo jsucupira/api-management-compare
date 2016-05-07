@@ -8,8 +8,13 @@ This tool is using the API Management REST services for it's functionality.  You
 
 **Note:** This is a very simple tool I created to help me maintain my environments in sync.  I did not pay any attention to the UI.  Feel free to update it.
 Also there are some functionality that are missing because they are not available in API Management REST services.  These are:
-> - Ability to set the Rewrite URL template for an operation
-> - Ability to set the caching policy for an operation
-> - Be able to add APIs to a product
+> - Be able to add APIs to a product and publish the product
 
 Feel free to contact me if you have any questions.
+
+Release notes:
+
+**Version 1.1.1:**
+
+> - Fixing some bugs.
+> - Adding the ability to copy the policy to the target. This only happens when the operation is first been created on the target system. This also includes the rewrite  URL template.

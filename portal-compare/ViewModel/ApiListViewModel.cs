@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using portal_compare.Helpers;
 using portal_compare.Model.Apis;
@@ -15,6 +12,11 @@ namespace portal_compare.ViewModel
         private ObservableCollection<Api> _apiList;
         private Api _currentApi;
 
+        public ApiListViewModel()
+        {
+            App.LoadApis = new RelayCommand(LoadApis);
+        }
+
         public ObservableCollection<Api> ApiList
         {
             get { return _apiList; }
@@ -22,38 +24,6 @@ namespace portal_compare.ViewModel
             {
                 _apiList = value;
                 OnPropertyChanged(nameof(ApiList));
-            }
-        }
-
-        public ApiListViewModel()
-        {
-            LoadApis();
-        }
-
-        private void LoadApis()
-        {
-            if (App.Credentials == null)
-            {
-                if (App.TabControl != null)
-                {
-                    object tab = App.TabControl.Items[0];
-                    App.TabControl.SelectedItem = tab;
-                }
-                MessageBox.Show("Please enter the API Management Credentials", "Error", MessageBoxButton.OK);
-            }
-            else
-            {
-                try
-                {
-                    HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
-                    ApiWrapper sourceApi = sourceClient.Get<ApiWrapper>("/apis");
-                    if (sourceApi != null)
-                        ApiList = new ObservableCollection<Api>(sourceApi.value);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(ex.Message, "Error");
-                }
             }
         }
 
@@ -84,6 +54,35 @@ namespace portal_compare.ViewModel
                                 App.LoadApiOperations.Execute();
                             }
                         }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Error");
+                }
+            }
+        }
+
+        private void LoadApis(object notUsed)
+        {
+            if (App.Credentials == null)
+            {
+                if (App.TabControl != null)
+                {
+                    object tab = App.TabControl.Items[0];
+                    App.TabControl.SelectedItem = tab;
+                }
+                MessageBox.Show("Please enter the API Management Credentials", "Error", MessageBoxButton.OK);
+            }
+            else
+            {
+                try
+                {
+                    HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
+                    ApiWrapper sourceApi = sourceClient.Get<ApiWrapper>("/apis");
+                    if (sourceApi != null)
+                    {
+                        ApiList = new ObservableCollection<Api>(sourceApi.value);
                     }
                 }
                 catch (Exception ex)

@@ -5,7 +5,6 @@ using System.Linq;
 using System.Windows;
 using portal_compare.Helpers;
 using portal_compare.Model.Operations;
-using portal_compare.Model.Products;
 
 namespace portal_compare.ViewModel
 {
@@ -13,9 +12,9 @@ namespace portal_compare.ViewModel
     {
         private ObservableCollection<string> _source;
         private string _sourceDifferences;
+        private List<Operation> _sourceList;
         private ObservableCollection<string> _target;
         private string _targetDifferences;
-        private List<Operation> _sourceList;
         private List<Operation> _targetList;
 
         public OperationViewModel()
@@ -24,6 +23,10 @@ namespace portal_compare.ViewModel
             MergeAllCommand = new RelayCommand(MergeAll);
             App.LoadApiOperations = new RelayCommand(Compare);
         }
+
+        public RelayCommand AddToTargetCommand { get; set; }
+
+        public RelayCommand MergeAllCommand { get; set; }
 
         public ObservableCollection<string> Source
         {
@@ -65,6 +68,109 @@ namespace portal_compare.ViewModel
             }
         }
 
+        private void AddOperation(string name, bool askConfirmation)
+        {
+            Operation original = _sourceList.FirstOrDefault(t => t.ToString().Equals(name.ToString(), StringComparison.OrdinalIgnoreCase));
+            HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
+
+            if (original != null)
+            {
+                Operation target = _targetList.FirstOrDefault(t => t.name.Equals(original.name.ToString(), StringComparison.OrdinalIgnoreCase));
+                HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
+                if (target == null)
+                {
+                    //Adding new
+                    bool result = true;
+                    if (askConfirmation)
+                    {
+                        result = MessageBox.Show($"Are you sure you want to add '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+                    }
+
+                    if (result)
+                    {
+                        string id = original.id.Replace(App.SourceApi.id, App.TargetApi.id);
+                        target = new Operation(id);
+                        target.name = original.name;
+                        target.description = original.description;
+                        target.method = original.method;
+                        target.urlTemplate = original.urlTemplate;
+                        target.request = original.request;
+                        target.responses = original.responses;
+                        try
+                        {
+                            //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#CreateOperation
+                            targetClient.Put($"{target.id}", original);
+
+                            if (sourceClient.CheckForPolicy(original.id))
+                            {
+                                CheckPolicy(original.id, target.id);
+                            }
+
+                            if (askConfirmation)
+                            {
+                                MessageBox.Show("Operation has been added.");
+                                if (App.LoadApiOperations != null)
+                                    App.LoadApiOperations.Execute();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Error");
+                        }
+                    }
+                }
+                else
+                {
+                    //Update existing
+                    bool result = true;
+                    if (askConfirmation)
+                        result = MessageBox.Show($"Are you sure you want to update '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
+
+                    if (result)
+                    {
+                        //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#UpdateOperation
+                        target.name = original.name;
+                        target.description = original.description;
+                        target.method = original.method;
+                        target.urlTemplate = original.urlTemplate;
+                        target.request = original.request;
+                        target.responses = original.responses;
+                        try
+                        {
+                            targetClient.Patch($"{target.id}", target);
+
+                            if (askConfirmation)
+                            {
+                                MessageBox.Show("Operation has been updated.");
+                                if (App.LoadApiOperations != null)
+                                    App.LoadApiOperations.Execute();
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Error");
+                        }
+                    }
+                }
+            }
+        }
+
+        private static void CheckPolicy(string originalId, string targetId)
+        {
+            HttpHelper sourceClient = new HttpHelper(App.Credentials.SourceServiceName, App.Credentials.SourceId, App.Credentials.SourceKey);
+            HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
+            string policy = sourceClient.GetPolicy(originalId);
+            targetClient.SetPolicy(policy, targetId);
+        }
+
+        private void AddToTarget(object name)
+        {
+            if (!string.IsNullOrEmpty(name as string))
+            {
+                AddOperation(name as string, true);
+            }
+        }
+
         private void Compare(object notUsed)
         {
             if (App.Credentials == null)
@@ -89,8 +195,8 @@ namespace portal_compare.ViewModel
 
                     if (sourceOperationWrapper?.operations != null && targetOperationWrapper?.operations != null)
                     {
-                        var sourceOperation = sourceOperationWrapper.operations;
-                        var targetOperation = targetOperationWrapper.operations;
+                        Operations sourceOperation = sourceOperationWrapper.operations;
+                        Operations targetOperation = targetOperationWrapper.operations;
 
                         if (sourceOperation?.value != null && targetOperation?.value != null)
                         {
@@ -112,6 +218,7 @@ namespace portal_compare.ViewModel
                                     sourceDifferences += 1;
                                     Source.Add(sourceGroup.ToString());
                                 }
+
                             }
 
                             foreach (Operation targetGroup in targetOperation.value)
@@ -136,96 +243,6 @@ namespace portal_compare.ViewModel
             }
         }
 
-        public RelayCommand MergeAllCommand { get; set; }
-
-        public RelayCommand AddToTargetCommand { get; set; }
-
-        private void AddToTarget(object name)
-        {
-            if (!string.IsNullOrEmpty(name as string))
-            {
-                AddOperation(name as string, true);
-            }
-        }
-
-        private void AddOperation(string name, bool askConfirmation)
-        {
-            var original = _sourceList.FirstOrDefault(t => t.ToString().Equals(name.ToString(), StringComparison.OrdinalIgnoreCase));
-            if (original != null)
-            {
-                var target = _targetList.FirstOrDefault(t => t.name.Equals(original.name.ToString(), StringComparison.OrdinalIgnoreCase));
-                HttpHelper targetClient = new HttpHelper(App.Credentials.TargetServiceName, App.Credentials.TargetId, App.Credentials.TargetKey);
-                if (target == null)
-                {
-                    //Adding new
-                    var result = true;
-                    if (askConfirmation)
-                    {
-                        result = MessageBox.Show($"Are you sure you want to add '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
-                    }
-
-                    if (result)
-                    {
-                        string id = original.id.Replace(App.SourceApi.id, App.TargetApi.id);
-                        target = new Operation(id);
-                        target.name = original.name;
-                        target.description = original.description;
-                        target.method = original.method;
-                        target.urlTemplate = original.urlTemplate;
-                        target.request = original.request;
-                        target.responses = original.responses;
-                        try
-                        {
-                            //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#CreateOperation
-                            targetClient.Put($"{target.id}", original);
-                            if (askConfirmation)
-                            {
-                                MessageBox.Show("Operation has been added.");
-                                if (App.LoadApiOperations != null)
-                                    App.LoadApiOperations.Execute();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show(ex.Message, "Error");
-                        }
-                    }
-                }
-                else
-                {
-                    //Update existing
-                    var result = true;
-                    if (askConfirmation)
-                       result = MessageBox.Show($"Are you sure you want to update '{original.name}' to the target environment?", "Warning", MessageBoxButton.YesNo) == MessageBoxResult.Yes;
-
-                    if (result)
-                    {
-                        //https://msdn.microsoft.com/en-us/library/azure/dn781423.aspx#UpdateOperation
-                        target.name = original.name;
-                        target.description = original.description;
-                        target.method = original.method;
-                        target.urlTemplate = original.urlTemplate;
-                        target.request = original.request;
-                        target.responses = original.responses;
-                        try
-                        {
-                            targetClient.Patch($"{target.id}", target);
-                            if (askConfirmation)
-                            {
-                                MessageBox.Show("Operation has been updated.");
-                                if (App.LoadApiOperations != null)
-                                    App.LoadApiOperations.Execute();
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            MessageBox.Show(ex.Message, "Error");
-                        }
-                    }
-                }
-            }
-        }
-
         private void MergeAll(object notUsed)
         {
             if (App.SourceApi == null || App.TargetApi == null)
@@ -234,7 +251,7 @@ namespace portal_compare.ViewModel
             }
             else
             {
-                var result = MessageBox.Show("Are you sure you want to merge all the operations?", "Warning", MessageBoxButton.YesNo);
+                MessageBoxResult result = MessageBox.Show("Are you sure you want to merge all the operations?", "Warning", MessageBoxButton.YesNo);
                 if (result == MessageBoxResult.Yes)
                 {
                     foreach (Operation operation in _sourceList)

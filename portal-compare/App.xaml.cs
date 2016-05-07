@@ -22,6 +22,7 @@ namespace portal_compare
         public static TabControl TabControl { get; set; }
         public static Api TargetApi { get; set; }
 
+        public static RelayCommand LoadApis;
         public static RelayCommand LoadApiOperations;
         public static RelayCommand CompareApiCommand;
         public static RelayCommand CompareGroupCommand;

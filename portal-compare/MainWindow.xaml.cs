@@ -50,6 +50,9 @@ namespace portal_compare
                         case 3:
                             App.CompareApiCommand.Execute();
                             break;
+                        case 4:
+                            App.LoadApis.Execute();
+                            break;
                     }
                 }
             }
